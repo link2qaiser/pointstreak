@@ -6,19 +6,20 @@ import sys
 driver = webdriver.Chrome()
 
 def saveCsv(toCSV,file_name):
+    print(file_name)
     keys = toCSV[0].keys()
 
-    with open(file_name, 'w') as output_file:
+    with open(file_name+".csv", 'w') as output_file:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(toCSV)
 
 def savePlayers(url):
     global driver
-
     driver.get(url)
-    xpathTd = '//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[3]/div/div/table/tbody/tr'
 
+
+    xpathTd = '//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[3]/div/div/table/tbody/tr'
     players = driver.find_elements_by_xpath(xpathTd)
 
     grandArr = []
@@ -37,6 +38,7 @@ def savePlayers(url):
         except:
             pass
     h2 = driver.find_element_by_xpath('//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[2]/div[3]/h2/span[1]/a').text
+    
     saveCsv(grandArr,h2)
     
 
@@ -51,6 +53,7 @@ def getColls(mainUrl):
     for coll in colls:
         collLink = coll.get_attribute("href")
         collAllLinks.append(collLink)
+        break
     return collAllLinks
 def getLeague(collAllLinks):
     leagAllLink = []
@@ -62,6 +65,7 @@ def getLeague(collAllLinks):
         for leag in leags:
             leagLink = leag.get_attribute("href")
             leagAllLink.append(leagLink)
+        break
     return leagAllLink
 
 
@@ -75,9 +79,10 @@ mainUrl = 'http://baseball.pointstreak.com/'
 collAllLinks = getColls(mainUrl)
 leagAllLink = getLeague(collAllLinks)
 
-print(leagAllLink)
-# for link in leagAllLink:
-#     savePlayers(link)
-#     time.sleep(3)
+#print(leagAllLink)
+for link in leagAllLink:
+    link = link.replace("team_home.html","team_roster.html")
+    savePlayers(link)
+    time.sleep(3)
 
 
