@@ -1,11 +1,22 @@
+
 from selenium import webdriver
+import time
+import csv
+import sys
 driver = webdriver.Chrome()
 
+def saveCsv(toCSV,file_name):
+    keys = toCSV[0].keys()
 
-def getPoints():
+    with open(file_name, 'w') as output_file:
+        dict_writer = csv.DictWriter(output_file, keys)
+        dict_writer.writeheader()
+        dict_writer.writerows(toCSV)
+
+def savePlayers(url):
     global driver
 
-    #driver.get(url)
+    driver.get(url)
     xpathTd = '//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[3]/div/div/table/tbody/tr'
 
     players = driver.find_elements_by_xpath(xpathTd)
@@ -25,33 +36,48 @@ def getPoints():
             grandArr.append(row)
         except:
             pass
-    print(grandArr)
+    h2 = driver.find_element_by_xpath('//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[2]/div[3]/h2/span[1]/a').text
+    saveCsv(grandArr,h2)
+    
+
+def getColls(mainUrl):
+    driver.get(mainUrl)
+
+    colls = driver.find_elements_by_xpath(
+        '//*[@id="featured-client"]/div/ul[2]/li/a')
+
+    collAllLinks = []
+    #Colls Link
+    for coll in colls:
+        collLink = coll.get_attribute("href")
+        collAllLinks.append(collLink)
+    return collAllLinks
+def getLeague(collAllLinks):
+    leagAllLink = []
+    for link in collAllLinks:
+        driver.get(link)
+        leags = driver.find_elements_by_xpath(
+            '//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[4]/div/div/table/tbody/tr/td[1]/a'
+        )
+        for leag in leags:
+            leagLink = leag.get_attribute("href")
+            leagAllLink.append(leagLink)
+    return leagAllLink
 
 
-#url = 'http://baseball.pointstreak.com/team_roster.html?teamid=65683&seasonid=32546&sortby=jersey'
+  
 
-#getPoints(url)
+
+
 
 #Open the main URL
 mainUrl = 'http://baseball.pointstreak.com/'
+collAllLinks = getColls(mainUrl)
+leagAllLink = getLeague(collAllLinks)
 
-driver.get(mainUrl)
+print(leagAllLink)
+# for link in leagAllLink:
+#     savePlayers(link)
+#     time.sleep(3)
 
-colls = driver.find_elements_by_xpath(
-    '//*[@id="featured-client"]/div/ul[2]/li/a')
 
-#Colls Link
-for coll in colls:
-    collLink = coll.get_attribute("href")
-    driver.get(collLink)
-    #League Links
-    leags = driver.find_elements_by_xpath(
-        '//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[4]/div/div/table/tbody/tr/td[1]/a'
-    )
-    for leag in leags:
-        leagLink = leag.get_attribute("href")
-        driver.get(leagLink)
-        driver.find_element_by_xpath(
-            '/html/body/div[3]/div[1]/div/div/div[1]/div/div[2]/ul[1]/li[7]/a'
-        ).click()
-        getPoints()
