@@ -5,14 +5,17 @@ import csv
 import sys
 driver = webdriver.Chrome()
 
-def saveCsv(toCSV,file_name):
-    print(file_name)
-    keys = toCSV[0].keys()
+def saveCsv(toCSV,team_name):
+    print(team_name)
+    try:
+        keys = toCSV[0].keys()
 
-    with open(file_name+".csv", 'w') as output_file:
-        dict_writer = csv.DictWriter(output_file, keys)
-        dict_writer.writeheader()
-        dict_writer.writerows(toCSV)
+        with open(team_name+".csv", 'w') as output_file:
+            dict_writer = csv.DictWriter(output_file, keys)
+            dict_writer.writeheader()
+            dict_writer.writerows(toCSV)
+    except:
+        pass
 
 def savePlayers(url):
     global driver
@@ -22,10 +25,16 @@ def savePlayers(url):
     xpathTd = '//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[3]/div/div/table/tbody/tr'
     players = driver.find_elements_by_xpath(xpathTd)
 
+    
+    league = driver.find_element_by_xpath('//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[2]/div[3]/h2/span[2]/a[2]/span[1]').text
+    team_name = driver.find_element_by_xpath('//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[2]/div[3]/h2/span[1]/a').text
+
     grandArr = []
     for item in players:
         try:
             row = {}
+            row['league'] = league
+            row['team'] = team_name
             row['num'] = item.find_element_by_xpath('.//td[1]').text
             row['player'] = item.find_element_by_xpath('.//td[2]').text
             row['bt'] = item.find_element_by_xpath('.//td[3]').text
@@ -37,9 +46,10 @@ def savePlayers(url):
             grandArr.append(row)
         except:
             pass
-    h2 = driver.find_element_by_xpath('//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[2]/div[3]/h2/span[1]/a').text
     
-    saveCsv(grandArr,h2)
+   
+    
+    saveCsv(grandArr,team_name)
     
 
 def getColls(mainUrl):
@@ -52,20 +62,20 @@ def getColls(mainUrl):
     #Colls Link
     for coll in colls:
         collLink = coll.get_attribute("href")
+        print("Colll Link: "+collLink)
         collAllLinks.append(collLink)
-        break
     return collAllLinks
 def getLeague(collAllLinks):
     leagAllLink = []
     for link in collAllLinks:
+        link = link.replace("scoreboard.html","teamlist.html")
         driver.get(link)
         leags = driver.find_elements_by_xpath(
-            '//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[4]/div/div/table/tbody/tr/td[1]/a'
+            '//*[@id="ps-content-bootstrapper"]/div/div/div[2]/div[3]//*/a'
         )
         for leag in leags:
             leagLink = leag.get_attribute("href")
             leagAllLink.append(leagLink)
-        break
     return leagAllLink
 
 
@@ -79,7 +89,6 @@ mainUrl = 'http://baseball.pointstreak.com/'
 collAllLinks = getColls(mainUrl)
 leagAllLink = getLeague(collAllLinks)
 
-#print(leagAllLink)
 for link in leagAllLink:
     link = link.replace("team_home.html","team_roster.html")
     savePlayers(link)
